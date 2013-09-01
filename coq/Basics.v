@@ -25,7 +25,7 @@ Proof.
   simpl; reflexivity.
 Qed.
 
-Inductive bool: Type :=
+Inductive bool : Set :=
   | true  : bool
   | false : bool.
 
@@ -85,3 +85,141 @@ Example test_andb33: (andb3 true false true) = false.
 Proof. reflexivity. Qed.
 Example test_andb34: (andb3 true true false) = false.
 Proof. reflexivity. Qed.
+
+Module Playground1.
+
+Inductive nat : Set :=
+  | O : nat
+  | S : nat -> nat.
+
+Definition pred (n : nat) : nat :=
+  match n with
+    | O    => O
+    | S n' => n'
+  end.
+
+End Playground1.
+
+Definition minustwo (n : nat) : nat :=
+  match n with
+    | O        => O
+    | S O      => O
+    | S (S n') => n'
+  end.
+
+Eval simpl in (minustwo 4).
+
+Fixpoint evenb (n : nat) : bool :=
+  match n with
+    | O        => true
+    | S O      => false
+    | S (S n') => evenb n'
+  end.
+
+Definition oddb (n : nat) := negb (evenb n).
+
+Example test_oddb1 : oddb (S O) = true.
+Proof. reflexivity. Qed.
+Example test_oddb2 : oddb 4 = false.
+Proof. reflexivity. Qed.
+
+Module Playground2.
+
+Fixpoint plus (n m : nat) : nat :=
+  match n with
+    | O    => m
+    | S n' => S (plus n' m)
+  end.
+
+Eval simpl in plus (S (S O)) (S (S (S O))).
+
+Fixpoint mult (n m : nat) : nat :=
+  match n with
+    | O    => O
+    | S n' => plus m (mult n' m)
+  end.
+
+Example test_mult1 : mult 3 3 = 9.
+Proof. reflexivity. Qed.
+
+Fixpoint minus (n m : nat) : nat :=
+  match n, m with
+    | O, _       => O
+    | n, O       => n
+    | S n', S m' => minus n' m'
+  end.
+
+Eval simpl in minus 5 3.
+
+End Playground2.
+
+Fixpoint exp (base power : nat) : nat :=
+  match power with
+    | O   => S O
+    | S p => mult base (exp base p)
+  end.
+
+Fixpoint factorial (n : nat) : nat :=
+  match n with
+    | O    => S O
+    | S n' => mult n (factorial n')
+  end.
+
+Example test_factorial1 : factorial 3 = 6.
+Proof. reflexivity. Qed.
+Example test_factorial2 : factorial 5 = 120.
+Proof. reflexivity. Qed.
+
+(*
+Notation "x + y" := (plus x y) (at level 50, left associativity) : nat_scope.
+Notation "x - y" := (minus x y) (at level 50, left associativity) : nat_scope.
+Notation "x * y" := (mult x y) (at level 40, left associativity) : nat_scope.
+*)
+
+Fixpoint beq_nat (n m : nat) : bool :=
+  match n with
+    | O    => match m with
+                | O    => true
+                | S m' => false
+              end
+    | S n' => match m with
+                | O    => false
+                | S m' => beq_nat n' m'
+              end
+  end.
+
+Fixpoint ble_nat (n m : nat) : bool :=
+  match n with
+    | O    => true
+    | S n' => match m with
+                | O    => false
+                | S m' => ble_nat n' m'
+              end
+  end.
+
+Example test_ble_nat1 : ble_nat 2 2 = true.
+Proof. reflexivity. Qed.
+Example test_ble_nat2 : ble_nat 2 4 = true.
+Proof. reflexivity. Qed.
+Example test_ble_nat3 : ble_nat 4 2 = false.
+Proof. reflexivity. Qed.
+
+Definition blt_nat (n m : nat) : bool :=
+  ble_nat (S n) m.
+
+Example test_blt_nat1 : blt_nat 2 2 = false.
+Proof. reflexivity. Qed.
+Example test_blt_nat2 : blt_nat 2 4 = true.
+Proof. reflexivity. Qed.
+Example test_blt_nat3 : blt_nat 4 2 = false.
+Proof. reflexivity. Qed.
+
+Theorem plus_O_n : forall n : nat, 0 + n = n.
+Proof. reflexivity. Qed.
+
+Theorem plus_1_l : forall n : nat, 1 + n = S n.
+Proof. intro n. reflexivity. Qed.
+
+Theorem mult_0_l : forall n : nat, 0 * n = 0.
+Proof. intro n. reflexivity. Qed.
+
