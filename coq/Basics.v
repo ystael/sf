@@ -223,3 +223,68 @@ Proof. intro n. reflexivity. Qed.
 Theorem mult_0_l : forall n : nat, 0 * n = 0.
 Proof. intro n. reflexivity. Qed.
 
+Theorem plus_id_example : forall n m : nat, n = m -> n + n = m + m.
+Proof. intros n m H. rewrite H. reflexivity. Qed.
+
+Theorem plus_id_exercise : forall n m o : nat, n = m -> m = o -> n + m = m + o.
+Proof. intros n m o H1 H2. rewrite -> H1. rewrite <- H2. reflexivity. Qed.
+
+Theorem mult_0_plus : forall n m : nat, (0 + n) * m = n * m.
+Proof. intros n m. rewrite plus_O_n. reflexivity. Qed.
+
+Theorem mult_S_1 : forall n m : nat, m = S n -> m * (1 + n) = m * m.
+Proof. intros n m H. rewrite plus_1_l. rewrite H. reflexivity. Qed.
+
+Theorem plus_1_neq_0 : forall n : nat, beq_nat (n + 1) 0 = false.
+Proof. intros n. destruct n as [| n']; reflexivity. Qed.
+
+Theorem negb_involutive : forall b : bool, negb (negb b) = b.
+Proof. intros b. destruct b; reflexivity. Qed.
+
+Theorem zero_nbeq_plus_1 : forall n : nat, beq_nat 0 (n + 1) = false.
+Proof. intros n. destruct n as [| n']; reflexivity. Qed.
+
+Theorem identity_fn_applied_twice :
+  forall f : bool -> bool,
+    (forall x : bool, f x = x) -> forall b : bool, f (f b) = b.
+Proof. intros f H b. rewrite H. rewrite H. reflexivity. Qed.
+
+Theorem andb_eq_orb :
+  forall b c : bool, (andb b c = orb b c) -> b = c.
+Proof. intros b c; destruct b; destruct c; simpl;
+       intro H; try rewrite H; reflexivity.
+Qed.
+
+Inductive bin : Set :=
+  | ZZ : bin         (* zero *)
+  | EE : bin -> bin  (* EE n = 2n *)
+  | OO : bin -> bin. (* OO n = 2n + 1 *)
+
+Fixpoint bin_S (n : bin) : bin :=
+  match n with
+    | ZZ    => OO ZZ
+    | EE n' => OO n'
+    | OO n' => EE (bin_S n')
+  end.
+
+Fixpoint nat_to_bin (n : nat) : bin :=
+  match n with
+    | O    => ZZ
+    | S n' => bin_S (nat_to_bin n')
+  end.
+
+Fixpoint bin_to_nat (n : bin) : nat :=
+  match n with
+    | ZZ    => O
+    | EE n' => 2 * (bin_to_nat n')
+      (* Note this is not S (bin_to_nat (EE n')) because that isn't structurally decreasing *)
+    | OO n' => S (2 * (bin_to_nat n'))
+  end.
+
+Example test_bin_to_nat1 : bin_to_nat (OO (EE (OO (EE (OO ZZ))))) = 21.
+Proof. reflexivity. Qed.
+Example test_bin_to_nat2 : bin_to_nat (EE (EE (EE ZZ))) = 0.
+Proof. reflexivity. Qed.
+Example test_bin_to_nat_S : S (bin_to_nat (OO (OO (OO (EE (OO ZZ)))))) =
+                            bin_to_nat (bin_S (OO (OO (OO (EE (OO ZZ)))))).
+Proof. reflexivity. Qed.

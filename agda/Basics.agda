@@ -170,3 +170,67 @@ inc-+-left = refl
 
 absorb-*-left : ∀ {n} → 0 * n ≡ 0
 absorb-*-left = refl
+
+id-+-example : ∀ {n m} → n ≡ m → n + n ≡ m + m
+id-+-example refl = refl
+
+id-+-exercise : ∀ {n m o} → n ≡ m → m ≡ o → n + m ≡ m + o
+id-+-exercise refl refl = refl
+
+*-zero-+ : ∀ {n m} → (0 + n) * m ≡ n * m
+*-zero-+ {n} with iden-+-left {n}
+*-zero-+ | refl = refl
+
+*-suc-1 : ∀ {n m} → m ≡ suc n → m * (1 + n) ≡ m * m
+*-suc-1 {n} pf with inc-+-left {n}
+*-suc-1 {n} refl | refl = refl
+
++-1-not-zero : ∀ {n} → (n + 1) =ℕ= 0 ≡ false
++-1-not-zero {zero}  = refl
++-1-not-zero {suc n} = refl
+
+¬-involutive : ∀ {b} → ¬ (¬ b) ≡ b
+¬-involutive {true}  = refl
+¬-involutive {false} = refl
+
+zero-neq-+-1 : ∀ {n} → 0 =ℕ= (n + 1) ≡ false
+zero-neq-+-1 {zero}  = refl
+zero-neq-+-1 {suc n} = refl
+
+identity-applied-twice : {f : Bool → Bool} →
+                         ((x : Bool) → f x ≡ x) → (b : Bool) → f (f b) ≡ b
+identity-applied-twice {f} f-is-id b rewrite f-is-id (f b) | f-is-id b = refl
+
+∧-eq-∨ : ∀ {b c} → b ∧ c ≡ b ∨ c → b ≡ c
+∧-eq-∨ {true}  {true}  refl = refl
+∧-eq-∨ {true}  {false} ()
+∧-eq-∨ {false} {true}  ()
+∧-eq-∨ {false} {false} refl = refl
+
+data BinNat : Set where
+  zz : BinNat           -- zero
+  ee : BinNat -> BinNat -- ee n = 2n
+  oo : BinNat -> BinNat -- oo n = 2n + 1
+
+bin-suc : BinNat -> BinNat
+bin-suc zz     = oo zz
+bin-suc (ee n) = oo n
+bin-suc (oo n) = ee (bin-suc n)
+
+nat→bin : ℕ → BinNat
+nat→bin zero    = zz
+nat→bin (suc n) = bin-suc (nat→bin n)
+
+bin→nat : BinNat → ℕ
+bin→nat zz     = zero
+bin→nat (ee n) = 2 * bin→nat n
+-- This isn't suc (bin→nat (ee n)) because that isn't structurally decreasing
+bin→nat (oo n) = suc (2 * (bin→nat n))
+
+test-bin→nat-1 : bin→nat (oo (ee (oo (ee (oo zz))))) ≡ 21
+test-bin→nat-1 = refl
+test-bin→nat-2 : bin→nat (ee (ee (ee zz))) ≡ 0
+test-bin→nat-2 = refl
+test-bin→nat-suc : suc (bin→nat (oo (oo (oo (ee (oo zz)))))) ≡
+                    bin→nat (bin-suc (oo (oo (oo (ee (oo zz))))))
+test-bin→nat-suc = refl
