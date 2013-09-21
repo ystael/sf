@@ -168,9 +168,37 @@ nat→bin-normal-double (suc n) rewrite suc-n-+-m n n
                                     | normal-double-bin-suc (nat→bin n)
                                     | nat→bin-normal-double n = refl
 
+nat→bin-double-suc : ∀ n → nat→bin (suc n + suc n) ≡ ee (nat→bin (suc n))
+nat→bin-double-suc zero    = refl
+nat→bin-double-suc (suc n) rewrite suc-n-+-m n (suc n)
+                                 | nat→bin-double-suc n = refl
+
+bin→nat-double-lemma : ∀ n → bin-suc (nat→bin (n + n)) ≡ oo (nat→bin n)
+bin→nat-double-lemma zero    = refl
+bin→nat-double-lemma (suc n) rewrite nat→bin-double-suc n = refl
+
 bin→nat→bin-normalized : ∀ n → nat→bin (bin→nat n) ≡ normalize-bin n
 bin→nat→bin-normalized zz     = refl
 bin→nat→bin-normalized (ee n) rewrite iden-+-right (bin→nat n)
                                     | nat→bin-normal-double (bin→nat n) 
                                     | bin→nat→bin-normalized n = refl
-bin→nat→bin-normalized (oo n) = ?
+bin→nat→bin-normalized (oo n) rewrite iden-+-right (bin→nat n)
+                                    | bin→nat-double-lemma (bin→nat n) 
+                                    | bin→nat→bin-normalized n = refl
+
+even-bin : BinNat → Bool
+even-bin zz     = true
+even-bin (ee _) = true 
+even-bin (oo _) = false
+
+even-bin-suc-suc : ∀ n → even-bin (bin-suc (bin-suc n)) ≡ even-bin n
+even-bin-suc-suc zz     = refl
+even-bin-suc-suc (ee _) = refl
+even-bin-suc-suc (oo _) = refl
+
+even-bin-correct-even : ∀ n → even-bin (nat→bin n) ≡ even n
+even-bin-correct-even zero          = refl
+even-bin-correct-even (suc zero)    = refl
+even-bin-correct-even (suc (suc n)) rewrite even-bin-suc-suc (nat→bin n)
+                                          | even-bin-correct-even n = refl
+
