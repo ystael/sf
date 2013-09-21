@@ -111,6 +111,66 @@ assoc-* zero    m p = refl
 assoc-* (suc n) m p rewrite *-+-right-distrib m (n * m) p | assoc-* n m p = refl
 
 =ℕ=-refl : ∀ n → n =ℕ= n ≡ true
-=ℕ=-refl zero    = refl
+=ℕ=-refl zero = refl
 =ℕ=-refl (suc n) rewrite =ℕ=-refl n = refl
 
+bin→nat-past-bin-suc : ∀ n → bin→nat (bin-suc n) ≡ suc (bin→nat n)
+bin→nat-past-bin-suc zz     = refl
+bin→nat-past-bin-suc (ee n) = refl
+bin→nat-past-bin-suc (oo n) rewrite iden-+-right (bin→nat (bin-suc n))
+                                  | iden-+-right (bin→nat n) 
+                                  | bin→nat-past-bin-suc n
+                                  | n-+-suc-m (bin→nat n) (bin→nat n) = refl
+
+nat→bin-past-bin-suc : ∀ n → nat→bin (suc n) ≡ bin-suc (nat→bin n)
+nat→bin-past-bin-suc _ = refl
+
+nat→bin→nat-roundtrip : ∀ n → bin→nat (nat→bin n) ≡ n
+nat→bin→nat-roundtrip zero = refl
+nat→bin→nat-roundtrip (suc n) rewrite bin→nat-past-bin-suc (nat→bin n)
+                                    | nat→bin→nat-roundtrip n = refl
+
+normal-double : BinNat → BinNat
+normal-double zz     = zz
+normal-double (ee n) = ee (ee n)
+normal-double (oo n) = ee (oo n)
+
+normal-double-correct : ∀ n → bin→nat (normal-double n) ≡ bin→nat n + bin→nat n
+normal-double-correct zz     = refl
+normal-double-correct (ee n) rewrite iden-*-left (bin→nat n)
+                                   | iden-+-right (bin→nat n + bin→nat n) = refl
+normal-double-correct (oo n) rewrite iden-*-left (bin→nat n)
+                                   | iden-+-right (bin→nat n + bin→nat n) = refl
+
+normalize-bin : BinNat → BinNat
+normalize-bin zz     = zz
+normalize-bin (ee n) = normal-double (normalize-bin n)
+normalize-bin (oo n) = oo (normalize-bin n)
+
+normalize-bin-correct : ∀ n → bin→nat (normalize-bin n) ≡ bin→nat n
+normalize-bin-correct zz = refl
+normalize-bin-correct (ee n) rewrite normal-double-correct (normalize-bin n)
+                                   | normalize-bin-correct n
+                                   | iden-+-right (bin→nat n) = refl
+normalize-bin-correct (oo n) rewrite normalize-bin-correct n = refl
+
+normal-double-bin-suc : ∀ n → normal-double (bin-suc n) ≡ bin-suc (bin-suc (normal-double n))
+normal-double-bin-suc zz     = refl
+normal-double-bin-suc (ee n) rewrite normal-double-bin-suc n = refl
+normal-double-bin-suc (oo n) rewrite normal-double-bin-suc n = refl
+
+suc-n-+-m : ∀ n m → n + suc m ≡ suc (n + m)
+suc-n-+-m n m rewrite n-+-suc-m n m = refl
+
+nat→bin-normal-double : ∀ n → nat→bin (n + n) ≡ normal-double (nat→bin n)
+nat→bin-normal-double zero    = refl
+nat→bin-normal-double (suc n) rewrite suc-n-+-m n n
+                                    | normal-double-bin-suc (nat→bin n)
+                                    | nat→bin-normal-double n = refl
+
+bin→nat→bin-normalized : ∀ n → nat→bin (bin→nat n) ≡ normalize-bin n
+bin→nat→bin-normalized zz     = refl
+bin→nat→bin-normalized (ee n) rewrite iden-+-right (bin→nat n)
+                                    | nat→bin-normal-double (bin→nat n) 
+                                    | bin→nat→bin-normalized n = refl
+bin→nat→bin-normalized (oo n) = ?
