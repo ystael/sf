@@ -201,4 +201,3 @@ even-bin-correct-even zero          = refl
 even-bin-correct-even (suc zero)    = refl
 even-bin-correct-even (suc (suc n)) rewrite even-bin-suc-suc (nat→bin n)
                                           | even-bin-correct-even n = refl
-
