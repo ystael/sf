@@ -1,6 +1,6 @@
 module Lists where
 
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Basics
 open import SFInduction
 open import Data.Nat renaming (_≤_ to leq-rel)
@@ -264,3 +264,8 @@ module NatList where
   nonzeros-++ []             _  = refl
   nonzeros-++ (zero    ∷ ns) ms rewrite nonzeros-++ ns ms = refl
   nonzeros-++ ((suc n) ∷ ns) ms rewrite nonzeros-++ ns ms = refl
+
+  snoc-++-cons : ∀ ns ms v → (snoc ns v) ++ ms ≡ ns ++ (v ∷ ms)
+  snoc-++-cons ns ms v rewrite snoc-++ ns v 
+                             | sym (assoc-++ ns (v ∷ []) ms) = refl
+

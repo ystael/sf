@@ -316,3 +316,7 @@ Proof. intros l1 l2; induction l1 as [| n l1'].
 Case "l1 = []".     reflexivity.
 Case "l1 = n::l1'". destruct n as [| n']; simpl; rewrite IHl1'; reflexivity.
 Qed.
+
+Theorem snoc_app_cons :
+  forall (l1 l2 : natlist) (v : nat), (snoc l1 v) ++ l2 = l1 ++ (v :: l2).
+Proof. intros l1 l2 v; rewrite snoc_append; rewrite <- app_ass; reflexivity. Qed.
