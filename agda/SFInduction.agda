@@ -1,6 +1,6 @@
 module SFInduction where
 
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 open import Basics
 open import Data.Nat renaming (_≤_ to leq-rel)
 
@@ -159,12 +159,9 @@ normal-double-bin-suc zz     = refl
 normal-double-bin-suc (ee n) rewrite normal-double-bin-suc n = refl
 normal-double-bin-suc (oo n) rewrite normal-double-bin-suc n = refl
 
-suc-n-+-m : ∀ n m → n + suc m ≡ suc (n + m)
-suc-n-+-m n m rewrite n-+-suc-m n m = refl
-
 nat→bin-normal-double : ∀ n → nat→bin (n + n) ≡ normal-double (nat→bin n)
 nat→bin-normal-double zero    = refl
-nat→bin-normal-double (suc n) rewrite suc-n-+-m n n
+nat→bin-normal-double (suc n) rewrite sym (n-+-suc-m n n)
                                     | normal-double-bin-suc (nat→bin n)
                                     | nat→bin-normal-double n = refl
 
