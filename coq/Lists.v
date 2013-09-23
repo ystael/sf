@@ -227,3 +227,92 @@ Proof. reflexivity. Qed.
 
 Theorem add_increments_count : forall (s : bag) (v : nat), count v (add v s) = S (count v s).
 Proof. intros s v; simpl; rewrite <- beq_nat_refl; reflexivity. Qed.
+
+Theorem nil_app : forall l : natlist, [] ++ l = l.
+Proof. reflexivity. Qed.
+
+Theorem tl_length_pred : forall l : natlist, length (tl l) = pred (length l).
+Proof. intro l; destruct l as [| n l']; reflexivity. Qed.
+
+Theorem app_ass : forall l1 l2 l3 : natlist, l1 ++ (l2 ++ l3) = (l1 ++ l2) ++ l3.
+Proof. intros l1 l2 l3; induction l1 as [| n l1'].
+Case "l1 = []".     reflexivity.
+Case "l1 = n::l1'". simpl; rewrite IHl1'; reflexivity.
+Qed.
+
+Theorem app_length : forall l1 l2 : natlist, length (l1 ++ l2) = length l1 + length l2.
+Proof. intros l1 l2; induction l1 as [| n l1'].
+Case "l1 = []".     reflexivity.
+Case "l1 = n::l1'". simpl; rewrite IHl1'; reflexivity.
+Qed.
+
+Fixpoint snoc (l : natlist) (v : nat) : natlist :=
+  match l with
+    | []      => [v]
+    | n :: l' => n :: snoc l' v
+  end.
+
+Fixpoint rev (l : natlist) : natlist :=
+  match l with
+    | []      => []
+    | n :: l' => snoc (rev l') n
+  end.
+
+Example test_rev1: rev [1;2;3] = [3;2;1].
+Proof. reflexivity. Qed.
+Example test_rev2: rev nil = nil.
+Proof. reflexivity. Qed.
+
+Theorem length_snoc : forall (l : natlist) (v : nat), length (snoc l v) = S (length l).
+Proof. intros l v; induction l as [| n l'].
+Case "l = []".    reflexivity.
+Case "l = n::l'". simpl; rewrite IHl'; reflexivity.
+Qed.
+
+Theorem length_rev : forall l : natlist, length (rev l) = length l.
+Proof. intro l; induction l as [| n l'].
+Case "l = []".    reflexivity.
+Case "l = n::l'". simpl; rewrite <- IHl'; rewrite length_snoc; reflexivity.
+Qed.
+
+Theorem app_nil_end : forall l : natlist, l ++ [] = l.
+Proof. intro l; induction l as [| n l'].
+Case "l = []".    reflexivity.
+Case "l = n::l'". simpl; rewrite IHl'; reflexivity.
+Qed.
+
+Lemma rev_snoc : forall (l : natlist) (v : nat), rev (snoc l v) = v :: rev l.
+Proof. intros l v; induction l as [| n l'].
+Case "l = []".    reflexivity.
+Case "l = n::l'". simpl; rewrite IHl'; reflexivity.
+Qed.
+
+Theorem rev_involutive : forall l : natlist, rev (rev l) = l.
+Proof. intro l; induction l as [| n l'].
+Case "l = []".    reflexivity.
+Case "l = n::l'". simpl; rewrite rev_snoc; rewrite IHl'; reflexivity.
+Qed.
+
+Theorem app_ass4 :
+  forall l1 l2 l3 l4 : natlist, l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
+Proof. intros l1 l2 l3 l4; repeat rewrite app_ass; reflexivity. Qed.
+
+Theorem snoc_append : forall (l : natlist) (v : nat), snoc l v = l ++ [v].
+Proof. intros l v; induction l as [| n l'].
+Case "l = []".    reflexivity.
+Case "l = n::l'". simpl. rewrite IHl'; reflexivity.
+Qed.
+
+Theorem distr_rev : forall l1 l2 : natlist, rev (l1 ++ l2) = (rev l2) ++ (rev l1).
+Proof. intros l1 l2; induction l1 as [| n l1'].
+Case "l1 = []".     simpl; rewrite app_nil_end; reflexivity.
+Case "l1 = n::l1'". simpl; repeat rewrite snoc_append; rewrite IHl1';
+                    rewrite app_ass; reflexivity.
+Qed.
+
+Lemma nonzeros_app :
+  forall l1 l2 : natlist, nonzeros (l1 ++ l2) = nonzeros l1 ++ nonzeros l2.
+Proof. intros l1 l2; induction l1 as [| n l1'].
+Case "l1 = []".     reflexivity.
+Case "l1 = n::l1'". destruct n as [| n']; simpl; rewrite IHl1'; reflexivity.
+Qed.

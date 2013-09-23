@@ -195,3 +195,72 @@ module NatList where
 
   add-increments-count : ∀ s v → count v (add v s) ≡ suc (count v s)
   add-increments-count s v rewrite =ℕ=-refl v = refl
+
+  iden-++-left : ∀ ns → [] ++ ns ≡ ns
+  iden-++-left _ = refl
+
+  tl-length-pred : ∀ ns → length (tl ns) ≡ pred (length ns)
+  tl-length-pred []       = refl
+  tl-length-pred (n ∷ ns) = refl
+
+  assoc-++ : ∀ l₁ l₂ l₃ → l₁ ++ (l₂ ++ l₃) ≡ (l₁ ++ l₂) ++ l₃
+  assoc-++ []       _  _  = refl
+  assoc-++ (_ ∷ ns) l₂ l₃ rewrite assoc-++ ns l₂ l₃ = refl
+
+  length-++ : ∀ l₁ l₂ → length (l₁ ++ l₂) ≡ length l₁ + length l₂
+  length-++ []       _  = refl
+  length-++ (_ ∷ ns) l₂ rewrite length-++ ns l₂ = refl
+
+  snoc : ℕList → ℕ → ℕList
+  snoc []       v = v ∷ []
+  snoc (n ∷ ns) v = n ∷ snoc ns v
+
+  reverse : ℕList → ℕList
+  reverse []       = []
+  reverse (n ∷ ns) = snoc (reverse ns) n
+
+  test-reverse-1 : reverse (1 ∷ 2 ∷ 3 ∷ []) ≡ 3 ∷ 2 ∷ 1 ∷ []
+  test-reverse-1 = refl
+  test-reverse-2 : reverse [] ≡ []
+  test-reverse-2 = refl
+
+  length-snoc : ∀ ns v → length (snoc ns v) ≡ suc (length ns)
+  length-snoc []       _ = refl
+  length-snoc (_ ∷ ns) v rewrite length-snoc ns v = refl
+
+  length-reverse : ∀ ns → length (reverse ns) ≡ length ns
+  length-reverse []       = refl
+  length-reverse (n ∷ ns) rewrite length-snoc (reverse ns) n | length-reverse ns = refl
+
+  iden-++-right : ∀ ns → ns ++ [] ≡ ns
+  iden-++-right []       = refl
+  iden-++-right (_ ∷ ns) rewrite iden-++-right ns = refl
+
+  reverse-snoc : ∀ ns v → reverse (snoc ns v) ≡ v ∷ reverse ns
+  reverse-snoc []       _ = refl
+  reverse-snoc (_ ∷ ns) v rewrite reverse-snoc ns v = refl
+
+  reverse-involutive : ∀ ns → reverse (reverse ns) ≡ ns
+  reverse-involutive []       = refl
+  reverse-involutive (n ∷ ns) rewrite reverse-snoc (reverse ns) n
+                                    | reverse-involutive ns = refl
+
+  assoc-++-4 : ∀ l₁ l₂ l₃ l₄ → l₁ ++ (l₂ ++ (l₃ ++ l₄)) ≡ ((l₁ ++ l₂) ++ l₃) ++ l₄
+  assoc-++-4 l₁ l₂ l₃ l₄ rewrite assoc-++ l₁ l₂ (l₃ ++ l₄)
+                               | assoc-++ (l₁ ++ l₂) l₃ l₄ = refl
+
+  snoc-++ : ∀ ns v → snoc ns v ≡ ns ++ (v ∷ [])
+  snoc-++ []       _ = refl
+  snoc-++ (_ ∷ ns) v rewrite snoc-++ ns v = refl
+
+  distrib-reverse : ∀ ns ms → reverse (ns ++ ms) ≡ reverse ms ++ reverse ns
+  distrib-reverse []       ms rewrite iden-++-right (reverse ms) = refl
+  distrib-reverse (n ∷ ns) ms rewrite snoc-++ (reverse (ns ++ ms)) n
+                                    | snoc-++ (reverse ns) n
+                                    | distrib-reverse ns ms
+                                    | assoc-++ (reverse ms) (reverse ns) (n ∷ []) = refl
+
+  nonzeros-++ : ∀ ns ms → nonzeros (ns ++ ms) ≡ nonzeros ns ++ nonzeros ms
+  nonzeros-++ []             _  = refl
+  nonzeros-++ (zero    ∷ ns) ms rewrite nonzeros-++ ns ms = refl
+  nonzeros-++ ((suc n) ∷ ns) ms rewrite nonzeros-++ ns ms = refl
