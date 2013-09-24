@@ -77,7 +77,7 @@ even-n-odd-suc-n (suc n) rewrite even-n-odd-suc-n n | ¬-involutive {even (suc n
 
 ≤-refl : ∀ n → n ≤ n ≡ true
 ≤-refl zero    = refl
-≤-refl (suc n) rewrite ≤-refl n = refl
+≤-refl (suc n) = ≤-refl n
 
 zero-≠-suc : ∀ n → zero =ℕ= suc n ≡ false
 zero-≠-suc _ = refl
@@ -167,7 +167,7 @@ nat→bin-normal-double (suc n) rewrite sym (n-+-suc-m n n)
 
 nat→bin-double-suc : ∀ n → nat→bin (suc n + suc n) ≡ ee (nat→bin (suc n))
 nat→bin-double-suc zero    = refl
-nat→bin-double-suc (suc n) rewrite suc-n-+-m n (suc n)
+nat→bin-double-suc (suc n) rewrite sym (n-+-suc-m n (suc n))
                                  | nat→bin-double-suc n = refl
 
 bin→nat-double-lemma : ∀ n → bin-suc (nat→bin (n + n)) ≡ oo (nat→bin n)
