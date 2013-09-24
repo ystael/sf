@@ -1,6 +1,6 @@
 module Lists where
 
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans)
 open import Basics
 open import SFInduction
 open import Data.Nat renaming (_≤_ to leq-rel)
@@ -269,3 +269,34 @@ module NatList where
   snoc-++-cons ns ms v rewrite snoc-++ ns v 
                              | sym (assoc-++ ns (v ∷ []) ms) = refl
 
+  count-member-nonzero : (ns : Bag) → (v : ℕ) → 1 ≤ count v (v ∷ ns) ≡ true
+  count-member-nonzero _ v rewrite =ℕ=-refl v = refl
+
+  n-≤-suc-n : ∀ n → n ≤ suc n ≡ true
+  n-≤-suc-n zero    = refl
+  n-≤-suc-n (suc n) = n-≤-suc-n n
+
+  -- This appears more difficult if you try to replace 0 by (v : ℕ).  See comments in the Coq
+  -- source for why; an analogous issue appears (rather than pattern matching on the first
+  -- element of ns, you attach "with v =ℕ= n", which needs to be used after it has been
+  -- 'discharged').
+  remove-decreases-count : (ns : Bag) → count 0 (remove-one 0 ns) ≤ count 0 ns ≡ true
+  remove-decreases-count []             = refl
+  remove-decreases-count (zero    ∷ ns) rewrite n-≤-suc-n (count 0 ns)    = refl
+  remove-decreases-count ((suc n) ∷ ns) rewrite remove-decreases-count ns = refl
+
+  sum-adds-count : (v : ℕ) → (ns ms : Bag) → count v (sum ns ms) ≡ count v ns + count v ms
+  sum-adds-count _ []       _  = refl
+  sum-adds-count v (n ∷ ns) ms with v =ℕ= n
+  ... | true  rewrite sum-adds-count v ns ms = refl
+  ... | false rewrite sum-adds-count v ns ms = refl
+
+  -- This is harder to do with Agda's rewrite feature because it doesn't do very well at
+  -- introducing facts of the form x ≡ f x to the unifier; see issue 520 at
+  -- http://code.google.com/p/agda/issues/detail?id=520 .  It turns out to be easier to
+  -- construct the proof term explicitly with trans.
+  reverse-injective : ∀ ns ms → reverse ns ≡ reverse ms → ns ≡ ms
+  reverse-injective ns ms pf = trans (sym (reverse-involutive ns))
+                                     (trans rev-pf (reverse-involutive ms))
+    where rev-pf : reverse (reverse ns) ≡ reverse (reverse ms)
+          rev-pf rewrite pf = refl

@@ -320,3 +320,39 @@ Qed.
 Theorem snoc_app_cons :
   forall (l1 l2 : natlist) (v : nat), (snoc l1 v) ++ l2 = l1 ++ (v :: l2).
 Proof. intros l1 l2 v; rewrite snoc_append; rewrite <- app_ass; reflexivity. Qed.
+
+Theorem count_member_nonzero : forall (s : bag) (v : nat), ble_nat 1 (count v (v :: s)) = true.
+Proof. intros s v; simpl; rewrite <- beq_nat_refl; reflexivity.
+Qed.
+
+Theorem ble_n_Sn : forall n : nat, ble_nat n (S n) = true.
+Proof. intro n; induction n as [| n'].
+Case "n = 0".    reflexivity.
+Case "n = S n'". simpl; exact IHn'.
+Qed.
+
+(* This actually appears somewhat more subtle if you try to replace 0 by (v : nat).
+ * Instead of destructing n, you need to destruct (beq_nat v n), but there are three
+ * occurrences of this in the theorem and one of them is behind the reduction of
+ * count v (remove_one v s).  One needs some way to retain the case-analyzed value of
+ * beq_nat v n in the context, which I don't know how to do. *)
+Theorem remove_decreases_count :
+  forall (s : bag), ble_nat (count 0 (remove_one 0 s)) (count 0 s) = true.
+Proof. intro s; induction s as [| n s'].
+Case "s = []".    reflexivity.
+Case "s = n::s'". simpl; destruct n as [| n'].
+ SCase "n = 0".    apply ble_n_Sn.
+ SCase "n = S n'". simpl; exact IHs'.
+Qed.
+
+Theorem sum_adds_count :
+  forall (v : nat) (s1 s2 : bag), count v (sum s1 s2) = count v s1 + count v s2.
+Proof. intros v s1 s2; induction s1 as [| n s1'].
+Case "s1 = []".     reflexivity.
+Case "s1 = n::s1'". simpl; destruct (beq_nat v n); rewrite IHs1'; reflexivity.
+Qed.
+
+Theorem rev_injective : forall (l1 l2 : natlist), rev l1 = rev l2 -> l1 = l2.
+Proof. intros l1 l2 H; rewrite <- (rev_involutive l1); rewrite <- (rev_involutive l2);
+       rewrite H; reflexivity.
+Qed.
