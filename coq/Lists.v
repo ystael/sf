@@ -345,6 +345,16 @@ Case "s = n::s'". simpl; destruct n as [| n'].
  SCase "n = S n'". simpl; exact IHs'.
 Qed.
 
+(* To solve the problem above, use the eqn: clause of destruct which retains the case info. *)
+Theorem remove_decreases_count' :
+  forall (s : bag) (v : nat), ble_nat (count v (remove_one v s)) (count v s) = true.
+Proof. intros s v; induction s as [| n s'].
+Case "s = []".    reflexivity.
+Case "s = n::s'". simpl; destruct (beq_nat v n) eqn: nH.
+ SCase "v = n".  apply ble_n_Sn.
+ SCase "v /= n". simpl; rewrite nH; exact IHs'.
+Qed.
+
 Theorem sum_adds_count :
   forall (v : nat) (s1 s2 : bag), count v (sum s1 s2) = count v s1 + count v s2.
 Proof. intros v s1 s2; induction s1 as [| n s1'].

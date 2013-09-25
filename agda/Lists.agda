@@ -1,6 +1,7 @@
 module Lists where
 
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
+open import Relation.Binary.PropositionalEquality
+  using (_≡_; refl; sym; trans; cong; inspect; [_])
 open import Basics
 open import SFInduction
 open import Data.Nat renaming (_≤_ to leq-rel)
@@ -284,6 +285,16 @@ module NatList where
   remove-decreases-count []             = refl
   remove-decreases-count (zero    ∷ ns) rewrite n-≤-suc-n (count 0 ns)    = refl
   remove-decreases-count ((suc n) ∷ ns) rewrite remove-decreases-count ns = refl
+
+  -- As in Coq, an additional trick solves the problem; here it is the inspect idiom, which
+  -- plays a similar role to the destruct eqn: clause in Coq - it can retain in the context
+  -- an equation for the result of an expression you pattern matched on.  Unlike the eqn:
+  -- clause, I don't have any idea how the type hackery for the Agda inspect idiom works yet.
+  remove-decreases-count′ : (ns : Bag) (v : ℕ) → count v (remove-one v ns) ≤ count v ns ≡ true
+  remove-decreases-count′ []       _ = refl
+  remove-decreases-count′ (n ∷ ns) v with v =ℕ= n | inspect (_=ℕ=_ v) n
+  ... | true  | _      = n-≤-suc-n (count v ns)
+  ... | false | [ pf ] rewrite pf | remove-decreases-count′ ns v = refl
 
   sum-adds-count : (v : ℕ) → (ns ms : Bag) → count v (sum ns ms) ≡ count v ns + count v ms
   sum-adds-count _ []       _  = refl
