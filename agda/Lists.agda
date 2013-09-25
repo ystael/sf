@@ -1,6 +1,6 @@
 module Lists where
 
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
 open import Basics
 open import SFInduction
 open import Data.Nat renaming (_≤_ to leq-rel)
@@ -297,6 +297,4 @@ module NatList where
   -- construct the proof term explicitly with trans.
   reverse-injective : ∀ ns ms → reverse ns ≡ reverse ms → ns ≡ ms
   reverse-injective ns ms pf = trans (sym (reverse-involutive ns))
-                                     (trans rev-pf (reverse-involutive ms))
-    where rev-pf : reverse (reverse ns) ≡ reverse (reverse ms)
-          rev-pf rewrite pf = refl
+                                     (trans (cong reverse pf) (reverse-involutive ms))
