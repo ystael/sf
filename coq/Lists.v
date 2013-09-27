@@ -457,3 +457,7 @@ Theorem dictionary_invariant2 :
   forall (d : dictionary) (k k' v : nat),
     beq_nat k k' = false -> find k d = find k (insert k' v d).
 Proof. intros d k k' v Hneq; simpl; rewrite Hneq; reflexivity. Qed.
+
+End Dictionary.
+
+End NatList.
