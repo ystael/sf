@@ -366,3 +366,94 @@ Theorem rev_injective : forall (l1 l2 : natlist), rev l1 = rev l2 -> l1 = l2.
 Proof. intros l1 l2 H; rewrite <- (rev_involutive l1); rewrite <- (rev_involutive l2);
        rewrite H; reflexivity.
 Qed.
+
+Inductive natoption : Set :=
+| Some : nat -> natoption
+| None : natoption.
+
+Fixpoint index (i : nat) (l : natlist) : natoption :=
+  match l with
+    | []    => None
+    | n::l' => match i with
+                 | O    => Some n
+                 | S i' => index i' l'
+               end
+  end.
+
+Example test_index1 : index 0 [4;5;6;7] = Some 4.
+Proof. reflexivity. Qed.
+Example test_index2 : index 3 [4;5;6;7] = Some 7.
+Proof. reflexivity. Qed.
+Example test_index3 : index 10 [4;5;6;7] = None.
+Proof. reflexivity. Qed.
+
+Definition option_elim (d : nat) (o : natoption) : nat :=
+  match o with
+    | Some n => n
+    | None   => d
+  end.
+
+Definition hd_opt (l : natlist) : natoption :=
+  match l with
+    | []   => None
+    | n::_ => Some n
+  end.
+
+Example test_hd_opt1 : hd_opt [] = None.
+Proof. reflexivity. Qed.
+Example test_hd_opt2 : hd_opt [1] = Some 1.
+Proof. reflexivity. Qed.
+Example test_hd_opt3 : hd_opt [5;6] = Some 5.
+Proof. reflexivity. Qed.
+
+Theorem option_elim_hd :
+  forall (l : natlist) (default : nat), hd default l = option_elim default (hd_opt l).
+Proof. intros l default; destruct l as [| n l']; reflexivity. Qed.
+
+Fixpoint beq_natlist (l1 l2 : natlist) : bool :=
+  match l1, l2 with
+    | [],      []      => true
+    | n1::l1', n2::l2' => andb (beq_nat n1 n2) (beq_natlist l1' l2')
+    | _,       _       => false
+  end.
+
+Example test_beq_natlist1 : (beq_natlist nil nil = true).
+Proof. reflexivity. Qed.
+Example test_beq_natlist2 : beq_natlist [1;2;3] [1;2;3] = true.
+Proof. reflexivity. Qed.
+Example test_beq_natlist3 : beq_natlist [1;2;3] [1;2;4] = false.
+Proof. reflexivity. Qed.
+Example test_beq_natlist4 : beq_natlist [1;2;3] [1;2] = false.
+Proof. reflexivity. Qed.
+
+Theorem beq_natlist_refl : forall l : natlist, true = beq_natlist l l.
+Proof. intro l; induction l as [| n l'].
+Case "l = []".    reflexivity.
+Case "l = n::l'". simpl; rewrite <- beq_nat_refl; rewrite <- IHl'; reflexivity.
+Qed.
+
+Module Dictionary.
+
+Inductive dictionary : Set :=
+| empty : dictionary
+| record : nat -> nat -> dictionary -> dictionary.
+
+Definition insert (key value : nat) (d : dictionary) : dictionary :=
+  record key value d.
+
+Fixpoint find (key : nat) (d : dictionary) : natoption :=
+  match d with
+    | empty         => None
+    | record k v d' => if beq_nat key k
+                         then Some v
+                         else find key d'
+  end.
+
+Theorem dictionary_invariant1 :
+  forall (d : dictionary) (k v : nat), find k (insert k v d) = Some v.
+Proof. intros d k v; simpl; rewrite <- beq_nat_refl; reflexivity. Qed.
+
+Theorem dictionary_invariant2 :
+  forall (d : dictionary) (k k' v : nat),
+    beq_nat k k' = false -> find k d = find k (insert k' v d).
+Proof. intros d k k' v Hneq; simpl; rewrite Hneq; reflexivity. Qed.

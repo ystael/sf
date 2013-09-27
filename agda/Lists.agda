@@ -309,3 +309,75 @@ module NatList where
   reverse-injective : ∀ ns ms → reverse ns ≡ reverse ms → ns ≡ ms
   reverse-injective ns ms pf = trans (sym (reverse-involutive ns))
                                      (trans (cong reverse pf) (reverse-involutive ms))
+
+  data ℕMaybe : Set where
+    just : ℕ → ℕMaybe
+    nothing : ℕMaybe
+
+  index : ℕ → ℕList → ℕMaybe
+  index _       []       = nothing
+  index zero    (n ∷ ns) = just n
+  index (suc i) (n ∷ ns) = index i ns
+
+  test-index-1 : index 0 (4 ∷ 5 ∷ 6 ∷ 7 ∷ []) ≡ just 4
+  test-index-1 = refl
+  test-index-2 : index 3 (4 ∷ 5 ∷ 6 ∷ 7 ∷ []) ≡ just 7
+  test-index-2 = refl
+  test-index-3 : index 10 (4 ∷ 5 ∷ 6 ∷ 7 ∷ []) ≡ nothing
+  test-index-3 = refl
+
+  maybe-elim : ℕ → ℕMaybe → ℕ
+  maybe-elim _ (just n) = n
+  maybe-elim d nothing  = d
+
+  hd-maybe : ℕList → ℕMaybe
+  hd-maybe []      = nothing
+  hd-maybe (n ∷ _) = just n
+
+  test-hd-maybe-1 : hd-maybe [] ≡ nothing
+  test-hd-maybe-1 = refl
+  test-hd-maybe-2 : hd-maybe (1 ∷ []) ≡ just 1
+  test-hd-maybe-2 = refl
+  test-hd-maybe-3 : hd-maybe (5 ∷ 6 ∷ []) ≡ just 5
+  test-hd-maybe-3 = refl
+
+  maybe-elim-hd : ∀ ns default → hd default ns ≡ maybe-elim default (hd-maybe ns)
+  maybe-elim-hd []       _ = refl
+  maybe-elim-hd (n ∷ ns) _ = refl
+
+  _=ℕList=_ : ℕList → ℕList → Bool
+  []       =ℕList= []       = true
+  (n ∷ ns) =ℕList= (m ∷ ms) = (n =ℕ= m) ∧ (ns =ℕList= ms)
+  _        =ℕList= _        = false
+
+  test-=ℕList=-1 : [] =ℕList= [] ≡ true
+  test-=ℕList=-1 = refl
+  test-=ℕList=-2 : (1 ∷ 2 ∷ 3 ∷ []) =ℕList= (1 ∷ 2 ∷ 3 ∷ []) ≡ true
+  test-=ℕList=-2 = refl
+  test-=ℕList=-3 : (1 ∷ 2 ∷ 3 ∷ []) =ℕList= (1 ∷ 2 ∷ 4 ∷ []) ≡ false
+  test-=ℕList=-3 = refl
+  test-=ℕList=-4 : (1 ∷ 2 ∷ 3 ∷ []) =ℕList= (1 ∷ 2 ∷ []) ≡ false
+  test-=ℕList=-4 = refl
+
+  =ℕList=-refl : ∀ ns → ns =ℕList= ns ≡ true
+  =ℕList=-refl []       = refl
+  =ℕList=-refl (n ∷ ns) rewrite =ℕ=-refl n = =ℕList=-refl ns
+
+  module Dictionary where
+
+    data Dictionary : Set where
+      empty  : Dictionary
+      insert : ℕ → ℕ → Dictionary → Dictionary
+
+    find : ℕ → Dictionary → ℕMaybe
+    find _   empty          = nothing
+    find key (insert k v d) with key =ℕ= k
+    ... | true  = just v
+    ... | false = find key d
+
+    dictionary-invariant-1 : ∀ d k v → find k (insert k v d) ≡ just v
+    dictionary-invariant-1 d k v rewrite =ℕ=-refl k = refl
+
+    dictionary-invariant-2 :
+      ∀ d k k′ v → k =ℕ= k′ ≡ false → find k d ≡ find k (insert k′ v d)
+    dictionary-invariant-2 d k k′ v k≠k′ rewrite k≠k′ = refl
