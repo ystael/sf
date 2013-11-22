@@ -190,3 +190,76 @@ test-flatmap-1 = refl
 option-map : {A B : Set} → (A → B) → Maybe A → Maybe B
 option-map _ nothing  = nothing
 option-map f (just x) = just (f x)
+
+foldr : {A B : Set} → (f : A → B → B) → (z : B) → (xs : List A) → B
+foldr _ z []       = z
+foldr f z (x ∷ xs) = f x (foldr f z xs)
+
+foldr-example-1 : foldr _*_ 1 (1 ∷ 2 ∷ 3 ∷ 4 ∷ []) ≡ 24
+foldr-example-1 = refl
+foldr-example-2 : foldr _∧_ true (true ∷ true ∷ false ∷ true ∷ []) ≡ false
+foldr-example-2 = refl
+foldr-example-3 : foldr _++_ [] ((1 ∷ []) ∷ [] ∷ (2 ∷ 3 ∷ []) ∷ (4 ∷ []) ∷ [])
+                  ≡ 1 ∷ 2 ∷ 3 ∷ 4 ∷ []
+foldr-example-3 = refl
+
+constantly : {A : Set} → A → ℕ → A
+constantly x = λ _ → x
+
+ftrue : ℕ → Bool
+ftrue = constantly true
+
+constantly-example-1 : ftrue 0 ≡ true
+constantly-example-1 = refl
+constantly-example-2 : (constantly 5) 99 ≡ 5
+constantly-example-2 = refl
+
+override : {A : Set} → (ℕ → A) → ℕ → A → ℕ → A
+override f k x k′ with k =ℕ= k′
+... | true  = x
+... | false = f k′
+
+f-mostly-true : ℕ → Bool
+f-mostly-true = override (override ftrue 1 false) 3 false
+
+override-example-1 : f-mostly-true 0 ≡ true
+override-example-1 = refl
+override-example-2 : f-mostly-true 1 ≡ false
+override-example-2 = refl
+override-example-3 : f-mostly-true 2 ≡ true
+override-example-3 = refl
+override-example-4 : f-mostly-true 3 ≡ false
+override-example-4 = refl
+
+override-example : (b : Bool) → (override (constantly b) 3 true) 2 ≡ b
+override-example _ = refl
+
+plus-3 : ℕ → ℕ
+plus-3 n = 3 + n
+
+unfold-example : {n m : ℕ} → 3 + n ≡ m → plus-3 n + 1 ≡ m + 1
+unfold-example refl = refl
+
+override-= : {A : Set} → (f : ℕ → A) → (k : ℕ) → (x : A) → (override f k x) k ≡ x
+override-= f k x rewrite =ℕ=-refl k = refl
+
+override-≠ : {A : Set} → {x1 x2 : A} → {k1 k2 : ℕ} → (f : ℕ → A) →
+             f k1 ≡ x1 → k2 =ℕ= k1 ≡ false → (override f k2 x2) k1 ≡ x1
+override-≠ f pf₁ pf₂ rewrite pf₂ | pf₁ = refl
+
+foldr-length : {A : Set} → List A → ℕ
+foldr-length = foldr (λ _ n → suc n) 0
+
+test-foldr-length-1 : foldr-length (4 ∷ 7 ∷ 0 ∷ []) ≡ 3
+test-foldr-length-1 = refl
+
+foldr-length-correct : {A : Set} → (xs : List A) → foldr-length xs ≡ length xs
+foldr-length-correct []       = refl
+foldr-length-correct (x ∷ xs) rewrite foldr-length-correct xs = refl
+
+foldr-map : {A B : Set} → (A → B) → List A → List B
+foldr-map f = foldr (λ x ys → (f x) ∷ ys) []
+
+foldr-map-correct : {A B : Set} → (f : A → B) → (xs : List A) → foldr-map f xs ≡ map f xs
+foldr-map-correct _ []       = refl
+foldr-map-correct f (x ∷ xs) rewrite foldr-map-correct f xs = refl

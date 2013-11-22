@@ -256,3 +256,79 @@ Definition option_map {X Y : Set} (f : X -> Y) (xo: option X) : option Y :=
     | None   => None
     | Some x => Some (f x)
   end.
+
+Fixpoint fold {X Y : Set} (f : X -> Y -> Y) (l : list X) (b : Y) : Y :=
+  match l with
+    | []    => b
+    | x::l' => f x (fold f l' b)
+  end.
+
+Example fold_example1 : fold mult [1; 2; 3; 4] 1 = 24.
+Proof. reflexivity. Qed.
+Example fold_example2 : fold andb [true; true; false; true] true = false.
+Proof. reflexivity. Qed.
+Example fold_example3 : fold app [[1]; []; [2;3]; [4]] [] = [1; 2; 3; 4].
+Proof. reflexivity. Qed.
+
+Definition constfun {X : Set} (x : X) : nat -> X := fun _ => x.
+
+Definition ftrue := constfun true.
+
+Example constfun_example1 : ftrue 0 = true.
+Proof. reflexivity. Qed.
+
+Example constfun_example2 : (constfun 5) 99 = 5.
+Proof. reflexivity. Qed.
+
+Definition override {X : Set} (f : nat -> X) (k : nat) (x : X) : nat -> X :=
+  fun (k' : nat) => if beq_nat k k' then x else f k'.
+
+Definition fmostlytrue := override (override ftrue 1 false) 3 false.
+
+Example override_example1 : fmostlytrue 0 = true.
+Proof. reflexivity. Qed.
+Example override_example2 : fmostlytrue 1 = false.
+Proof. reflexivity. Qed.
+Example override_example3 : fmostlytrue 2 = true.
+Proof. reflexivity. Qed.
+Example override_example4 : fmostlytrue 3 = false.
+Proof. reflexivity. Qed.
+
+Theorem override_example : forall (b : bool), (override (constfun b) 3 true) 2 = b.
+Proof. reflexivity. Qed.
+
+Definition plus3 (n : nat) : nat := 3 + n.
+
+Theorem unfold_example : forall (n m : nat), 3 + n = m -> plus3 n + 1 = m + 1.
+Proof. intros n m H; unfold plus3; rewrite H; reflexivity. Qed.
+
+Theorem override_eq : forall {X : Set} (f : nat -> X) (k : nat) (x : X),
+                        (override f k x) k = x.
+Proof. intros X f k x; unfold override; rewrite <- beq_nat_refl; reflexivity. Qed.
+
+Theorem override_neq : forall {X : Set} x1 x2 k1 k2 (f : nat -> X),
+                         f k1 = x1 ->
+                         beq_nat k2 k1 = false ->
+                         (override f k2 x2) k1 = x1.
+Proof. intros X x1 x2 k1 k2 f Hk1 Hneq; unfold override; rewrite Hneq; exact Hk1. Qed.
+
+Definition fold_length {X : Set} (l : list X) : nat :=
+  fold (fun _ n => S n) l 0.
+
+Example test_fold_length1 : fold_length [4; 7; 0] = 3.
+Proof. reflexivity. Qed.
+
+Theorem fold_length_correct : forall {X : Set} (l : list X), fold_length l = length l.
+Proof. intros X l; induction l as [| x l'].
+Case "l = []".    reflexivity.
+Case "l = x::l'". unfold fold_length; simpl; rewrite <- IHl'; reflexivity.
+Qed.
+
+Definition fold_map {X Y : Set} (f : X -> Y) (l : list X) : list Y :=
+  fold (fun x ys => (f x) :: ys) l [].
+
+Theorem fold_map_correct : forall {X Y : Set} (f : X -> Y) (l : list X), fold_map f l = map f l.
+Proof. intros X Y f l; induction l as [| x l'].
+Case "l = []".    reflexivity.
+Case "l = x::l'". unfold fold_map; simpl; rewrite <- IHl'; reflexivity.
+Qed.
