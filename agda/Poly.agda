@@ -155,3 +155,38 @@ test-partition-1 : partition odd (1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ []) ≡ ⟨ 1 �
 test-partition-1 = refl
 test-partition-2 : partition (λ _ → false) (5 ∷ 9 ∷ 0 ∷ []) ≡ ⟨ [] , 5 ∷ 9 ∷ 0 ∷ [] ⟩
 test-partition-2 = refl
+
+map : {A B : Set} → (A → B) → List A → List B
+map _ []       = []
+map f (a ∷ as) = f a ∷ map f as
+
+test-map-1 : map (_+_ 3) (2 ∷ 0 ∷ 2 ∷ []) ≡ 5 ∷ 3 ∷ 5 ∷ []
+test-map-1 = refl
+test-map-2 : map odd (2 ∷ 1 ∷ 2 ∷ 5 ∷ []) ≡ false ∷ true ∷ false ∷ true ∷ []
+test-map-2 = refl
+test-map-3 : map (λ n → even n ∷ odd n ∷ []) (2 ∷ 1 ∷ 2 ∷ 5 ∷ []) ≡
+             (true ∷ false ∷ []) ∷ (false ∷ true ∷ []) ∷
+             (true ∷ false ∷ []) ∷ (false ∷ true ∷ []) ∷ []
+test-map-3 = refl
+
+map-snoc : {A B : Set} → (f : A → B) → (v : A) → (xs : List A) →
+           map f (snoc xs v) ≡ snoc (map f xs) (f v)
+map-snoc _ _ []       = refl
+map-snoc f v (x ∷ xs) rewrite map-snoc f v xs = refl
+
+map-reverse : {A B : Set} → (f : A → B) → (xs : List A) →
+              map f (reverse xs) ≡ reverse (map f xs)
+map-reverse _ []       = refl
+map-reverse f (x ∷ xs) rewrite map-snoc f x (reverse xs) | map-reverse f xs = refl
+
+flatmap : {A B : Set} → (A → List B) → List A → List B
+flatmap _ []       = []
+flatmap f (x ∷ xs) = f x ++ flatmap f xs
+
+test-flatmap-1 : flatmap (λ n → n ∷ n ∷ n ∷ []) (1 ∷ 5 ∷ 4 ∷ []) ≡
+                 1 ∷ 1 ∷ 1 ∷ 5 ∷ 5 ∷ 5 ∷ 4 ∷ 4 ∷ 4 ∷ []
+test-flatmap-1 = refl
+
+option-map : {A B : Set} → (A → B) → Maybe A → Maybe B
+option-map _ nothing  = nothing
+option-map f (just x) = just (f x)

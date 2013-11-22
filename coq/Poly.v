@@ -191,11 +191,11 @@ Proof. reflexivity. Qed.
 
 Definition countoddmembers' (l : list nat) : nat := length (filter oddb l).
 
-Example test_countoddmembers'1: countoddmembers' [1;0;3;1;4;5] = 4.
+Example test_countoddmembers'1 : countoddmembers' [1;0;3;1;4;5] = 4.
 Proof. reflexivity. Qed.
-Example test_countoddmembers'2: countoddmembers' [0;2;4] = 0.
+Example test_countoddmembers'2 : countoddmembers' [0;2;4] = 0.
 Proof. reflexivity. Qed.
-Example test_countoddmembers'3: countoddmembers' nil = 0.
+Example test_countoddmembers'3 : countoddmembers' nil = 0.
 Proof. reflexivity. Qed.
 
 Definition filter_even_gt7 (l : list nat) : list nat :=
@@ -209,7 +209,50 @@ Proof. reflexivity. Qed.
 Definition partition {X : Set} (p : X -> bool) (l : list X) : list X * list X :=
   (filter p l, filter (fun x => negb (p x)) l).
 
-Example test_partition1: partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
+Example test_partition1 : partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
 Proof. reflexivity. Qed.
-Example test_partition2: partition (fun x => false) [5;9;0] = ([], [5;9;0]).
+Example test_partition2 : partition (fun x => false) [5;9;0] = ([], [5;9;0]).
 Proof. reflexivity. Qed.
+
+Fixpoint map {X Y : Set} (f : X -> Y) (l : list X) : list Y :=
+  match l with
+    | []    => []
+    | x::l' => f x :: map f l'
+  end.
+
+Example test_map1 : map (plus 3) [2; 0; 2] = [5; 3; 5].
+Proof. reflexivity. Qed.
+Example test_map2 : map oddb [2; 1; 2; 5] = [false; true; false; true].
+Proof. reflexivity. Qed.
+Example test_map3 : map (fun n => [evenb n; oddb n]) [2; 1; 2; 5] =
+                    [[true; false]; [false; true]; [true; false]; [false; true]].
+Proof. reflexivity. Qed.
+
+Lemma map_snoc : forall {X Y : Set} (f : X -> Y) (v : X) (l: list X),
+                   map f (snoc l v) = snoc (map f l) (f v).
+Proof. intros X Y f v l; induction l as [| x l'].
+Case "l = []".    reflexivity.
+Case "l = x::l'". simpl; rewrite IHl'; reflexivity.
+Qed.
+
+Theorem map_rev : forall {X Y : Set} (f : X -> Y) (l : list X), map f (rev l) = rev (map f l).
+Proof. intros X Y f l; induction l as [| x l'].
+Case "l = []".    reflexivity.
+Case "l = x::l'". simpl; rewrite map_snoc; rewrite IHl'; reflexivity.
+Qed.
+
+Fixpoint flat_map {X Y : Set} (f : X -> list Y) (l : list X) : list Y :=
+  match l with
+    | []    => []
+    | x::l' => f x ++ flat_map f l'
+  end.
+
+Example test_flat_map1 : flat_map (fun n => [n; n; n]) [1; 5; 4] =
+                         [1; 1; 1; 5; 5; 5; 4; 4; 4].
+Proof. reflexivity. Qed.
+
+Definition option_map {X Y : Set} (f : X -> Y) (xo: option X) : option Y :=
+  match xo with
+    | None   => None
+    | Some x => Some (f x)
+  end.
