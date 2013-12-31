@@ -3,6 +3,7 @@ module MoreCoq where
 open import Relation.Binary.PropositionalEquality
   using (_≡_; refl; sym; trans; cong; inspect; [_])
 open import Data.Nat renaming (_≤_ to leq-rel)
+open import Data.Empty
 open import Basics
 open import SFInduction
 open import Poly
@@ -155,3 +156,159 @@ sillyfun-false n with n =ℕ= 3 | n =ℕ= 5
 ... | true  | _     = refl
 ... | false | true  = refl
 ... | false | false = refl
+
+override-shadow : {A : Set} → (x₁ x₂ : A) → (k₁ k₂ : ℕ) → (f : ℕ → A) →
+                  (override (override f k₁ x₂) k₁ x₁) k₂ ≡ (override f k₁ x₁) k₂
+override-shadow {A} x₁ x₂ k₁ k₂ f with k₁ =ℕ= k₂ | inspect (_=ℕ=_ k₁) k₂
+... | true  | _      = refl
+... | false | [ pf ] rewrite override-≠ {A} {f k₂} {x₁} {k₂} {k₁} f refl pf
+                           | override-≠ {A} {f k₂} {x₂} {k₂} {k₁} f refl pf = refl
+
+unzip-one : {A B : Set} → (x : A) → (y : B) → (ps : List (A × B)) →
+            unzip (⟨ x , y ⟩ ∷ ps) ≡ ⟨ x ∷ fst (unzip ps) , y ∷ snd (unzip ps) ⟩
+unzip-one x y ps with unzip ps | inspect unzip ps
+... | ⟨ xs , ys ⟩ | [ pf ] = refl
+
+zip-unzip : {A B : Set} → (ps : List (A × B)) → (xs : List A) → (ys : List B) →
+            unzip ps ≡ ⟨ xs , ys ⟩ → ps ≡ zip xs ys
+zip-unzip ps _ _ pf rewrite sym (cong fst pf)
+                          | sym (cong snd pf) = sym (zip-unzip′ ps)
+  where zip-unzip′ : {A B : Set} → (ps : List (A × B)) →
+                     zip (fst (unzip ps)) (snd (unzip ps)) ≡ ps
+        zip-unzip′ [] = refl
+        zip-unzip′ (⟨ x , y ⟩ ∷ ps) rewrite cong fst (unzip-one x y ps)
+                                          | cong snd (unzip-one x y ps)
+                                          | zip-unzip′ ps = refl
+
+sillyfun-1 : ℕ → Bool
+sillyfun-1 n = if n =ℕ= 3 then true else if n =ℕ= 5 then true else false
+
+boolean-if-inversion : (b : Bool) → (if b then true else false) ≡ b
+boolean-if-inversion true  = refl
+boolean-if-inversion false = refl
+
+double-if-inversion : (b₁ b₂ : Bool) →
+                      (if b₁ then true else if b₂ then true else false) ≡ b₁ ∨ b₂
+double-if-inversion true  _     = refl
+double-if-inversion false true  = refl
+double-if-inversion false false = refl
+
+is-3 : ℕ → Bool
+is-3 n = if n =ℕ= 3 then true else false
+
+is-3-correct : ∀ {n} → is-3 n ≡ true → n ≡ 3
+is-3-correct {n} pf with n =ℕ= 3 | inspect (_=ℕ=_ n) 3
+is-3-correct refl | true  | [ pf ] = =ℕ=-true pf
+is-3-correct ()   | false | [ pf ]
+
+sillyfun-1-odd : ∀ {n} → sillyfun-1 n ≡ true → odd n ≡ true
+sillyfun-1-odd {n} pf with n =ℕ= 3 | inspect (_=ℕ=_ n) 3
+                         | n =ℕ= 5 | inspect (_=ℕ=_ n) 5
+-- I don't understand why =ℕ=-true has to have the n argument explicitly supplied here for
+-- things to typecheck, since pf₃ has type n =ℕ= 3
+sillyfun-1-odd {n} refl | true  | [ pf₃ ] | _     | [ pf₅ ] rewrite =ℕ=-true {n} pf₃ = refl
+sillyfun-1-odd {n} refl | false | [ pf₃ ] | true  | [ pf₅ ] rewrite =ℕ=-true {n} pf₅ = refl
+sillyfun-1-odd     ()   | false | [ pf₃ ] | false | [ pf₅ ]
+
+bool-fn-applied-thrice : (f : Bool → Bool) → (b : Bool) → f (f (f b)) ≡ f b
+bool-fn-applied-thrice f b with f true | inspect f true | f false | inspect f false
+bool-fn-applied-thrice f true  | true  | [ pf₁ ] | _     | [ pf₀ ]
+  rewrite pf₁ | pf₁ | pf₁ = refl
+bool-fn-applied-thrice f false | _     | [ pf₁ ] | false | [ pf₀ ]
+  rewrite pf₀ | pf₀ | pf₀ = refl
+bool-fn-applied-thrice f true  | false | [ pf₁ ] | true  | [ pf₀ ]
+  rewrite pf₁ | pf₀ | pf₁ = refl
+bool-fn-applied-thrice f true  | false | [ pf₁ ] | false | [ pf₀ ]
+  rewrite pf₁ | pf₀ | pf₀ = refl
+bool-fn-applied-thrice f false | true  | [ pf₁ ] | true  | [ pf₀ ]
+  rewrite pf₀ | pf₁ | pf₁ = refl
+bool-fn-applied-thrice f false | false | [ pf₁ ] | true  | [ pf₀ ]
+  rewrite pf₀ | pf₁ | pf₀ = refl
+
+override-same : {A : Set} → (x₁ : A) → (k₁ k₂ : ℕ) → (f : ℕ → A) →
+                f k₁ ≡ x₁ → (override f k₁ x₁) k₂ ≡ f k₂
+override-same x₁ k₁ k₂ f pf with k₁ =ℕ= k₂ | inspect (_=ℕ=_ k₁) k₂
+... | true  | [ pfk ] rewrite sym (=ℕ=-true {k₁} pfk) = sym pf
+... | false | _       = refl
+
+=ℕ=-sym : (n m : ℕ) → n =ℕ= m ≡ m =ℕ= n
+=ℕ=-sym n m with n =ℕ= m | inspect (_=ℕ=_ n) m | m =ℕ= n | inspect (_=ℕ=_ m) n
+... | true  | _ | true  | _ = refl
+... | false | _ | false | _ = refl
+-- These two cases are absurd but cannot be easily rejected using absurd patterns so we prove
+-- the contradiction directly from hypotheses
+... | true  | [ pf-nm ] | false | [ pf-mn ]
+    rewrite =ℕ=-true {n} pf-nm | =ℕ=-refl m = pf-mn
+... | false | [ pf-nm ] | true  | [ pf-mn ]
+    rewrite =ℕ=-true {m} pf-mn | =ℕ=-refl n = sym pf-nm
+
+=ℕ=-trans : {n m p : ℕ} → n =ℕ= m ≡ true → m =ℕ= p ≡ true → n =ℕ= p ≡ true
+=ℕ=-trans {n} {m} {p} pf-nm pf-mp with =ℕ=-true {n} pf-nm | =ℕ=-true {m} pf-mp
+... | re-nm | re-mp rewrite re-nm | sym re-mp = =ℕ=-refl m 
+
+unzip-zip : {A B : Set} → (xs : List A) → (ys : List B) →
+            length xs ≡ length ys → unzip (zip xs ys) ≡ ⟨ xs , ys ⟩
+unzip-zip []       []       _  = refl
+unzip-zip (x ∷ xs) []       ()
+unzip-zip []       (y ∷ ys) ()
+unzip-zip (x ∷ xs) (y ∷ ys) pf rewrite unzip-one x y (zip xs ys)
+                                     | unzip-zip xs ys (suc-injective pf) = refl
+
+override-≠′ : {A : Set} → (x₂ : A) → (k₁ k₂ : ℕ) → (f : ℕ → A) →
+              k₂ =ℕ= k₁ ≡ false → override f k₂ x₂ k₁ ≡ f k₁
+override-≠′ {A} x₂ k₁ k₂ f pf = override-≠ {A} {(f k₁)} {x₂} {k₁} {k₂} f refl pf
+
+contra-elim : ∀ {ℓ} → {Whatever : Set ℓ} → true ≡ false → Whatever
+contra-elim pf = ⊥-elim (contra-⊥ pf)
+  where contra-⊥ : true ≡ false → ⊥
+        contra-⊥ ()
+
+override-permute : {A : Set} → (x₁ x₂ : A) → (k₁ k₂ k₃ : ℕ) → (f : ℕ → A) →
+                   k₂ =ℕ= k₁ ≡ false →
+                   (override (override f k₂ x₂) k₁ x₁) k₃ ≡ (override (override f k₁ x₁) k₂ x₂) k₃
+override-permute x₁ x₂ k₁ k₂ k₃ f pf₂₁ with k₁ =ℕ= k₃ | inspect (_=ℕ=_ k₁) k₃
+                                          | k₂ =ℕ= k₃ | inspect (_=ℕ=_ k₂) k₃
+-- This first case is absurd (k₁ ≡ k₃ and k₂ ≡ k₃ but k₁ ≠ k₂)
+... | true  | [ pf₁₃ ] | true  | [ pf₂₃ ]
+  rewrite =ℕ=-true {k₁} pf₁₃ | =ℕ=-true {k₂} pf₂₃ | =ℕ=-refl k₃ = contra-elim pf₂₁
+... | true  | [ pf₁₃ ] | false | _
+  rewrite =ℕ=-true {k₁} pf₁₃ | override-= f k₃ x₁ = refl
+... | false | _        | true  | [ pf₂₃ ]
+  rewrite =ℕ=-true {k₂} pf₂₃ | override-= f k₃ x₂ = refl
+... | false | [ pf₁₃ ] | false | [ pf₂₃ ] 
+  rewrite override-≠′ (override f k₂ x₂ k₁) k₃ k₁ (override f k₂ x₂) pf₁₃
+        | override-≠′ x₂ k₃ k₂ f pf₂₃
+        | override-≠′ x₁ k₃ k₁ f pf₁₃ = refl
+
+cons-head-≡ : {A : Set} → {x y : A} → {xs ys : List A} →
+              x ∷ xs ≡ y ∷ ys → x ≡ y
+cons-head-≡ {A} {x} {.x} {xs} {.xs} refl = refl
+
+filter-exercise : {A : Set} → (p : A → Bool) → (x : A) → (ys pxs′ : List A) →
+                  filter p ys ≡ x ∷ pxs′ → p x ≡ true
+filter-exercise _ _ []        _    ()
+filter-exercise p x (y ∷ ys′) pxs′ pf with p y | inspect p y
+... | true  | [ pf-py ] rewrite sym (cons-head-≡ pf) = pf-py
+... | false | _ = filter-exercise p x ys′ pxs′ pf
+
+forall-bool : {A : Set} → (p : A → Bool) → (xs : List A) → Bool
+forall-bool p [] = true
+forall-bool p (x ∷ xs) with p x
+... | true  = forall-bool p xs
+... | false = false
+
+exists-bool : {A : Set} → (p : A → Bool) → (xs : List A) → Bool
+exists-bool p [] = false
+exists-bool p (x ∷ xs) with p x
+... | true  = true
+... | false = exists-bool p xs
+
+exists-bool′ : {A : Set} → (p : A → Bool) → (xs : List A) → Bool
+exists-bool′ p xs = ¬ (forall-bool (λ x → ¬ (p x)) xs)
+
+exists-equivalent : {A : Set} → (p : A → Bool) → (xs : List A) →
+                    exists-bool′ p xs ≡ exists-bool p xs
+exists-equivalent p [] = refl
+exists-equivalent p (x ∷ xs) with p x
+... | true  = refl
+... | false rewrite exists-equivalent p xs = refl

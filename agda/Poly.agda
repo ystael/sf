@@ -243,8 +243,8 @@ unfold-example refl = refl
 override-= : {A : Set} → (f : ℕ → A) → (k : ℕ) → (x : A) → (override f k x) k ≡ x
 override-= f k x rewrite =ℕ=-refl k = refl
 
-override-≠ : {A : Set} → {x1 x2 : A} → {k1 k2 : ℕ} → (f : ℕ → A) →
-             f k1 ≡ x1 → k2 =ℕ= k1 ≡ false → (override f k2 x2) k1 ≡ x1
+override-≠ : {A : Set} → {x₁ x₂ : A} → {k₁ k₂ : ℕ} → (f : ℕ → A) →
+             f k₁ ≡ x₁ → k₂ =ℕ= k₁ ≡ false → (override f k₂ x₂) k₁ ≡ x₁
 override-≠ f pf₁ pf₂ rewrite pf₂ | pf₁ = refl
 
 foldr-length : {A : Set} → List A → ℕ
