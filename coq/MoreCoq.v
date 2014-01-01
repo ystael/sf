@@ -213,6 +213,7 @@ Theorem beq_nat_trans : forall (n m p : nat),
   beq_nat n m = true -> beq_nat m p = true -> beq_nat n p = true.
 Proof. intros n m p Hnm Hmp; apply beq_nat_true in Hnm; apply beq_nat_true in Hmp;
        rewrite Hnm; rewrite <- Hmp; rewrite <- beq_nat_refl; reflexivity.
+Qed.
 
 Theorem split_combine : forall (X Y : Set) (l1 : list X) (l2 : list Y),
   length l1 = length l2 -> split (combine l1 l2) = (l1, l2).
